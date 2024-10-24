@@ -83,46 +83,18 @@ public class CPUScheduler {
 
    // Non-preemptive Priority Scheduling algorithm
    static void priorityScheduling() {
-      // Sort tasks by arrival time to ensure they are considered in correct order
-      tasks.sort(Comparator.comparingInt(t -> t.arrivalTime));
-      
-      // Create a PriorityQueue to store tasks based on their priority (lower value = higher priority)
-      PriorityQueue<Task> readyQueue = new PriorityQueue<>(Comparator.comparingInt(t -> t.priority));
-      
-      int completedTasks = 0;  // Count of completed tasks
-      
-      while (completedTasks < tasks.size()) {
-         // Add tasks to the ready queue that have arrived by the current time
-         for (Task task : tasks) {
-            if (task.arrivalTime <= currentTime && !readyQueue.contains(task) && task.startTime == -1) {
-                  readyQueue.add(task);  // Add the task to the ready queue
-            }
-         }
+      // Sort tasks first by arrival time, and then by priority (higher value = higher priority)
+      tasks.sort(Comparator.comparingInt((Task t) -> t.arrivalTime).thenComparingInt(t -> -t.priority)); // Negative for descending priority
 
-         if (readyQueue.isEmpty()) {
-            // If no tasks are ready, move the time forward
-            currentTime++;
-         } else {
-            // Get the task with the highest priority (lowest priority number)
-            Task currentTask = readyQueue.poll();
-            
-            // Set the start time for the task if it is running for the first time
-            if (currentTask.startTime == -1) {
-                  currentTask.startTime = currentTime;
-            }
-
-            // Execute the current task to completion
-            currentTime += currentTask.burstTime;
-            currentTask.completionTime = currentTime;
-
-            // Calculate metrics for the current task
-            currentTask.turnaroundTime = currentTask.completionTime - currentTask.arrivalTime;
-            currentTask.waitingTime = currentTask.turnaroundTime - currentTask.burstTime;
-            currentTask.responseTime = currentTask.startTime - currentTask.arrivalTime;
-
-            // Increment the completed tasks counter
-            completedTasks++;
-         }
+      // Simulate task execution in the sorted order
+      for (Task task : tasks) {
+         currentTime = Math.max(currentTime, task.arrivalTime); // Adjust current time
+         task.startTime = currentTime; // Set the start time for the task
+         task.completionTime = currentTime + task.burstTime; // Calculate completion time
+         task.waitingTime = task.startTime - task.arrivalTime; // Calculate waiting time
+         task.turnaroundTime = task.completionTime - task.arrivalTime; // Calculate turnaround time
+         task.responseTime = task.waitingTime; // Response time is the same as waiting time
+         currentTime += task.burstTime; // Move the current time forward
       }
    }
 

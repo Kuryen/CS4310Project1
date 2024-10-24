@@ -75,10 +75,36 @@ public class CPUScheduler {
 
    // SJF scheduling algorithm
    static void sjf() {
-      // Sort tasks by burst time 
-      tasks.sort(Comparator.comparingInt(t -> t.burstTime));
-      // Reuse the FCFS logic since SJF behaves similarly
-      fcfs();
+      List<Task> availableTasks = new ArrayList<>();
+      int completed = 0;
+
+      while (completed < tasks.size()) {
+         // Add tasks that have arrived by the current time to the available list
+         for (Task task : tasks) {
+            if (task.arrivalTime <= currentTime && !availableTasks.contains(task) && task.startTime == -1) {
+               availableTasks.add(task);
+            }
+         }
+
+        if (availableTasks.isEmpty()) {
+            currentTime++; // If no task is available, increment time
+            continue;
+         }
+
+         // Find the task with the shortest burst time
+         availableTasks.sort(Comparator.comparingInt(t -> t.burstTime));
+         Task currentTask = availableTasks.remove(0); // Execute the shortest job
+
+         // Simulate execution of the selected task
+         currentTask.startTime = currentTime;
+         currentTask.completionTime = currentTime + currentTask.burstTime;
+         currentTask.waitingTime = currentTask.startTime - currentTask.arrivalTime;
+         currentTask.turnaroundTime = currentTask.completionTime - currentTask.arrivalTime;
+         currentTask.responseTime = currentTask.waitingTime;
+         
+         currentTime = currentTask.completionTime; // Update current time
+         completed++; // Increment the completed task count
+      }
    }
 
    // Non-preemptive Priority Scheduling algorithm

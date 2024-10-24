@@ -128,7 +128,7 @@ public class CPUScheduler {
    static void roundRobin(int quantum) {
       Queue<Task> queue = new LinkedList<>(tasks); // Create a queue for tasks
 
-      // Simulate the Round Robin scheduling
+      // RR scheduling
       while (!queue.isEmpty()) {
          Task task = queue.poll(); // Get the next task from the queue
 
@@ -156,21 +156,39 @@ public class CPUScheduler {
    // Function to print the results after scheduling completes
    static void printResults() {
       double totalWait = 0, totalTurnaround = 0, totalResponse = 0;
+      int totalBurstTime = 0; // To track the total busy time
 
-      // Print details for each task and calculate totals
+      // Calculate the earliest start time and latest completion time
+      int firstStartTime = tasks.stream()
+                                .mapToInt(task -> task.startTime)
+                                .min()
+                                .orElse(0); // Earliest start time, or 0 if no tasks
+      int lastCompletionTime = tasks.stream()
+                                    .mapToInt(task -> task.completionTime)
+                                    .max()
+                                    .orElse(0); // Latest completion time, or 0 if no tasks
+
+      // Print details for each task and accumulate totals
       for (Task task : tasks) {
          totalWait += task.waitingTime;
          totalTurnaround += task.turnaroundTime;
          totalResponse += task.responseTime;
+         totalBurstTime += task.burstTime;
+
          System.out.printf(
-                  "PID: %d, Start: %d, Completion: %d, Waiting: %d, Turnaround: %d, Response: %d\n",
-                  task.pid, task.startTime, task.completionTime,
-                  task.waitingTime, task.turnaroundTime, task.responseTime);
+            "PID: %d, Start: %d, Completion: %d, Waiting: %d, Turnaround: %d, Response: %d\n", 
+            task.pid, task.startTime, task.completionTime, 
+            task.waitingTime, task.turnaroundTime, task.responseTime);
       }
 
-      // Print averages of waiting, turnaround, and response times
+      // Print averages
       System.out.printf("Average Waiting Time: %.2f\n", totalWait / tasks.size());
       System.out.printf("Average Turnaround Time: %.2f\n", totalTurnaround / tasks.size());
       System.out.printf("Average Response Time: %.2f\n", totalResponse / tasks.size());
+
+      // Calculate and print CPU Utilization Rate
+      int totalTime = lastCompletionTime - firstStartTime; // Total makespan
+      double cpuUtilization = ((double) totalBurstTime / totalTime) * 100;
+      System.out.printf("CPU Utilization Rate: %.2f%%\n", cpuUtilization);
    }
 }
